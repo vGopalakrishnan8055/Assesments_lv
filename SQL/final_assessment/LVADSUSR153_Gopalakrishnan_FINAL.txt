@@ -1,0 +1,173 @@
+
+Gopalakrishnan
+Emp_id : 4361
+Final Assessment
+
+
+-----------------------------------------------------------------------------
+
+1.
+select product_category, avg(sales_amount) 
+from products p INNER JOIN sales_records s ON p.product_id = s.product_id 
+where sales_date >= date_sub(curdate(), interval 30 day) group by product_category;
+
+
+-----------------------------------------------------------------------------
+
+2.
+
+select product_id, rank() over (order by sum(sales_amount) desc) from sales_records 
+where year(sales_date) = year(curdate()) group by product_id LIMIT 3;
+
+
+-----------------------------------------------------------------------------
+
+3.
+
+select customer_id, rank() over (order by sum(sales_amount)/(select sum(sales_amount) from sales_records)*100 desc) as Rnk 
+from sales_records group by customer_id;
+
+
+
+-----------------------------------------------------------------------------
+
+4.
+
+select game_genre, ps.player_id, round(avg(60*24*(datediff(ps.play_date, p.registration_date)))) as total_mins
+from playerscores ps inner join games g on ps.game_id = g.game_id inner join players p on ps.player_id = p.player_id group by 1,2 order by 3 desc;
+
+or --------------------
+
+select distinct customer_id, case 
+	when customer_id in (select customer_id from sales_records where sales_date > date_sub(sales_date, interval 6 month) 
+    group by customer_id having count(distinct month(sales_date)) >= 4) then "Consistent Buyers"
+    else "Occasional Buyers"
+    end as buyertype
+from sales_records
+
+
+-----------------------------------------------------------------------------
+
+5.
+select departure_airport, arrival_airport, avg(t.ticket_price) from tickets t inner join flights f on t.flight_id = f.flight_id group by departure_airport, arrival_airport;
+
+
+-----------------------------------------------------------------------------
+
+6.
+select f.flight_number, f.departure_date, count(t.ticket_id) from flights f inner join tickets t on f.flight_id = t.flight_id 
+where departure_date >= date_sub(curdate(), interval 1 month) group by f.flight_id order by count(t.ticket_id) desc;
+
+-----------------------------------------------------------------------------
+
+7.
+select passenger_id, sum(ticket_price), p.frequent_flyer_status from tickets t inner join passengers p using(passenger_id) group by passenger_id order by 2 desc limit 5;
+
+-----------------------------------------------------------------------------
+
+8.
+select month(ticket_date), count(ticket_id) from tickets group by 1 order by 2 desc limit 1;
+
+-----------------------------------------------------------------------------
+
+9.
+#There is the playtime duration given to calculate 
+
+select game_genre, p.player_id, avg(minute(play_date)) from playerscores p inner join games g using(game_id) group by 1,2 order by 3 desc;
+
+
+-----------------------------------------------------------------------------
+
+10.
+select game_id, count(player_id) from playerscores group by 1 order by 2 desc limit 3;
+
+
+-----------------------------------------------------------------------------
+
+11.
+select game_id, avg(score), max(score), count(player_id) from playerscores group by 1;
+
+-----------------------------------------------------------------------------
+
+12.
+select ps.player_id, p.registration_date, max(play_date) from players p right join playerscores ps using(player_id) 
+group by ps.player_id
+having max(play_date) >= date_sub(curdate(), interval 30 day)
+
+-----------------------------------------------------------------------------
+
+13.
+select doctor_id, sum(cost) from treatments group by doctor_id order by sum(cost) desc limit 5;
+
+
+-----------------------------------------------------------------------------
+
+14.
+
+select treatment_name, sum(bill_amount), round(sum(bill_amount)/(select sum(bill_amount) from patients)*100,2) as perc_contri from treatments t join patients p using(patient_id) group by 1;
+
+
+
+-----------------------------------------------------------------------------
+
+15.
+select p1.patient_id, p1.patient_name, p2.admission_date, p1.discharge_date
+from patients p1 join patients p2 on (p1.patient_id = p2.patient_id and p2.admission_date > p1.discharge_date) where datediff(p2.admission_date, p1.discharge_date) <= 30
+order by p2.admission_date;
+
+-----------------------------------------------------------------------------
+
+16.
+select gender, diagnosis, round(avg(discharge_date - admission_date)) as avg_los from patients group by 1,2;
+
+-----------------------------------------------------------------------------
+
+17.
+select department, semester, avg(grade) from enrollments e INNER JOIN courses c using(course_id) 
+group by department, semester order by department, semester;
+
+-----------------------------------------------------------------------------
+
+18.
+select major, count(student_id), enrollment_year from students group by major, enrollment_year order by count(student_id) desc;
+
+-----------------------------------------------------------------------------
+
+19.
+select s.student_id, student_name, semester, sum(credits) 
+from students s inner join enrollments e on s.student_id = e.student_id
+inner join courses c on e.course_id = c.course_id
+group by 1,2,3
+having sum(credits) >= 50;
+
+-----------------------------------------------------------------------------
+
+20.
+
+select enrollment_year, course_name, tstudents from
+(
+select enrollment_year, course_name, count(s.student_id) as tstudents, rank() over (partition by enrollment_year order by count(s.student_id) desc) as rnk
+from courses c inner join enrollments e on c.course_id = e.course_id inner join students s on s.student_id = e.student_id
+where enrollment_year >= year(curdate()) - 5
+group by 1,2
+order by 1,3 desc
+) x
+where rnk <=3;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
